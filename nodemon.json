@@ -1,0 +1,4 @@
+{
+    "ext": "*.ts",
+    "exec": "tsc && npm run start-dev"
+}

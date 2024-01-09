@@ -1,0 +1,24 @@
+{
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "nodemon": "^3.0.2",
+    "sqlite3": "^5.1.7-rc.0"
+  },
+  "name": "shopping-list-backend",
+  "description": "",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start-dev": "set NODE_ENV=dev&& cp ./.env.dev ./dist/.env.dev && cd dist && node ./index",
+    "start-prod": "NODE_ENV=production PORT=81 node ./bin/www"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.5",
+    "typescript": "^5.3.3"
+  }
+}
