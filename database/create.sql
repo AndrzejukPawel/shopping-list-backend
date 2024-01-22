@@ -15,7 +15,9 @@ create table grocery_list(
 create table grocery_item(
 	id integer,
 	name text,
-	primary key(id)
+  preferred_amount_unit_id integer,
+	primary key(id),
+	FOREIGN KEY(preferred_amount_unit_id) REFERENCES amount_unit_translation(id)
 );
 
 create table locale(
@@ -37,6 +39,7 @@ create table amount_unit_translation(
 	id integer,
 	locale_id integer,
 	translation text,
+	short_translation text,
 	primary key(id, locale_id),
 	FOREIGN KEY(locale_id) REFERENCES locale(id)
 );
