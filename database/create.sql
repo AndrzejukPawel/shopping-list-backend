@@ -14,34 +14,25 @@ create table grocery_list(
 
 create table grocery_item(
 	id integer,
-	name text,
   preferred_amount_unit_id integer,
 	primary key(id),
 	FOREIGN KEY(preferred_amount_unit_id) REFERENCES amount_unit_translation(id)
-);
-
-create table locale(
-	id integer,
-	locale text,
-	primary key(id)
 );
 
 create table recipe(
 	id integer,
 	name text,
 	description text,
-	locale_id integer,
-	primary key(id),
-	FOREIGN KEY(locale_id) REFERENCES locale(id)
+	locale text,
+	primary key(id)
 );
 
 create table amount_unit_translation(
 	id integer,
-	locale_id integer,
+	locale text,
 	translation text,
 	short_translation text,
-	primary key(id, locale_id),
-	FOREIGN KEY(locale_id) REFERENCES locale(id)
+	primary key(id, locale)
 );
 
 create table grocery_list_access_level(
@@ -59,6 +50,7 @@ create table grocery_list_item(
 	grocery_item_id integer,
 	amount int, 
 	amount_unit_id integer, 
+  bought boolean,
 	primary key (id),
 	FOREIGN KEY(grocery_list_id) REFERENCES grocery_list(id),
 	FOREIGN KEY(grocery_item_id) REFERENCES grocery_item(id),
@@ -67,11 +59,10 @@ create table grocery_list_item(
 
 create table grocery_item_translation(
 	grocery_item_id integer,
-	locale_id integer,
+	locale text,
 	name text,
-	primary key(grocery_item_id, locale_id),
-	FOREIGN KEY(grocery_item_id) REFERENCES grocery_item(id),
-	FOREIGN KEY(locale_id) REFERENCES locale(id)
+	primary key(grocery_item_id, locale),
+	FOREIGN KEY(grocery_item_id) REFERENCES grocery_item(id)
 );
 
 create table recipe_ingredient(
