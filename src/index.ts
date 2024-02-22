@@ -44,8 +44,8 @@ dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
         console.log(`${req.httpMethod.toUpperCase()}: ${req.path}`)
       })
 
-      console.log(`Starting at PORT=${process.env.PORT} with ENV=${process.env.NODE_ENV}`)
-      app.listen(process.env.PORT)
+      app.listen(process.env.PORT);
+      console.log(`Started at PORT=${process.env.PORT} with ENV=${process.env.NODE_ENV}`)
     });
   });
 })();
