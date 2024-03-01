@@ -14,9 +14,18 @@ export class GetUserGroceryLists implements RequestDefinition {
     if (!userId) return res.status(400).send();
 
     this.database.all(
-      `select gl.*
-            from grocery_list_access_level glal join grocery_list gl on glal.grocery_list_id = gl.id 
-            where glal.user_id = $id;`,
+      `select gl.*, gli1.bought, gli2.not_bought
+        from grocery_list_access_level glal
+        join grocery_list gl on glal.grocery_list_id = gl.id
+        left join (select grocery_list_id, count(*) as bought
+            from grocery_list_item
+            where bought == 1
+            group by grocery_list_id) gli1  on glal.grocery_list_id = gli1.grocery_list_id
+        left join (select grocery_list_id, count(*) as not_bought
+            from grocery_list_item
+            where bought is NULL or bought == 0
+            group by grocery_list_id) gli2  on glal.grocery_list_id = gli2.grocery_list_id
+        where glal.user_id = $id;`,
       {
         $id: userId,
       },
