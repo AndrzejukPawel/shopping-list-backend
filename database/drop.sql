@@ -1,0 +1,11 @@
+drop table if exists user;
+drop table if exists enum_permission;
+drop table if exists enum_amount_unit;
+drop table if exists enum_grocery_item;
+drop table if exists recipe;
+drop table if exists recipe_ingredient;
+drop table if exists grocery_list;
+drop table if exists grocery_list_permission;
+drop table if exists grocery_list_item;
+drop table if exists calendar_entry_recipe;
+drop table if exists calendar_entry_grocery_list;

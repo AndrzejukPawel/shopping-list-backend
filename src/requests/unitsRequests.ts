@@ -11,7 +11,7 @@ export class GetUnits implements RequestDefinition {
   handler: RequestHandler = (req, res) => {
     const locale = req.query.locale;
     this.database.all(
-      "SELECT * FROM  amount_unit_translation WHERE locale = $locale;",
+      "SELECT * FROM  enum_amount_unit WHERE locale = $locale;",
       {
         $locale: locale,
       },

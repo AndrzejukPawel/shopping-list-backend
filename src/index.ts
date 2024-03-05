@@ -3,7 +3,15 @@ import dotenv from 'dotenv'
 import { CreateUser, GetUser } from './requests/userRequests';
 import { Database } from 'sqlite3';
 import { RequestDefinition } from './interfaces/method';
-import { AddItemToGroceryList, CreateGroceryList, DeleteGroceryList, DeleteGroceryListItem as DeleteGroceryListItem, GetGroceryListItem, GetUserGroceryList, GetUserGroceryLists, UpdateGroceryList, UpdateGroceryListItemBoughtStatus } from './requests/groceryListRequests';
+import {
+  AddItemToGroceryList,
+  CreateGroceryList,
+  DeleteGroceryList,
+  DeleteGroceryListItem,
+  GetGroceryListItem,
+  GetUserGroceryLists,
+  UpdateGroceryListItemBoughtStatus
+} from './requests/groceryListRequests';
 import { GetUnits } from './requests/unitsRequests';
 import { GetGroceryItems } from './requests/groceryItemsRequests';
 import { GetRecipes } from './requests/recipeRequests';
@@ -28,9 +36,7 @@ dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
         new GetUser(database),
         new CreateUser(database),
         new GetUserGroceryLists(database),
-        new GetUserGroceryList(database),
         new CreateGroceryList(database),
-        new UpdateGroceryList(database),
         new DeleteGroceryList(database),
         new GetGroceryListItem(database),
         new UpdateGroceryListItemBoughtStatus(database),
@@ -41,9 +47,12 @@ dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
         new GetRecipes(database),
       ];
       console.log(`Registering requests:`)
-      requests.forEach((req) => {
-        app[req.httpMethod](req.path, req.handler);
-        console.log(`${req.httpMethod.toUpperCase()}: ${req.path}`)
+      requests.forEach((reqDef) => {
+        app[reqDef.httpMethod](reqDef.path, (req, res) => {
+          console.log(`${req.method} ${req.url} ${JSON.stringify(req.body)}`);
+          return reqDef.handler(req, res, () => { });
+        });
+        console.log(`${reqDef.httpMethod.toUpperCase()}: ${reqDef.path}`)
       })
 
       app.listen(process.env.PORT);

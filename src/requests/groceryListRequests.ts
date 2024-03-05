@@ -13,19 +13,19 @@ export class GetUserGroceryLists implements RequestDefinition {
     const userId = req.query.userId;
     if (!userId) return res.status(400).send();
 
-    this.database.all(
-      `select gl.*, gli1.bought, gli2.not_bought
-        from grocery_list_access_level glal
-        join grocery_list gl on glal.grocery_list_id = gl.id
-        left join (select grocery_list_id, count(*) as bought
-            from grocery_list_item
-            where bought == 1
-            group by grocery_list_id) gli1  on glal.grocery_list_id = gli1.grocery_list_id
-        left join (select grocery_list_id, count(*) as not_bought
-            from grocery_list_item
-            where bought is NULL or bought == 0
-            group by grocery_list_id) gli2  on glal.grocery_list_id = gli2.grocery_list_id
-        where glal.user_id = $id;`,
+    this.database.all(`
+      select gl.*, gli1.bought, gli2.not_bought
+      from grocery_list_permission glp
+      join grocery_list gl on glp.grocery_list_id = gl.id
+      left join (select grocery_list_id, count(*) as bought
+        from grocery_list_item
+        where bought == 1
+        group by grocery_list_id) gli1  on glp.grocery_list_id = gli1.grocery_list_id
+      left join (select grocery_list_id, count(*) as not_bought
+        from grocery_list_item
+        where bought is NULL or bought == 0
+        group by grocery_list_id) gli2  on glp.grocery_list_id = gli2.grocery_list_id
+      where glp.user_id = $id;`,
       {
         $id: userId,
       },
@@ -41,88 +41,45 @@ export class GetUserGroceryLists implements RequestDefinition {
   }
 }
 
-export class GetUserGroceryList implements RequestDefinition {
-  constructor(private database: Database) { }
-
-  httpMethod: HttpMethod = 'get';
-  path: string = '/groceryList/:listId';
-  handler: RequestHandler = (req, res) => {
-    const userId = req.query.userId;
-    if (!userId) return res.status(400).send();
-
-    const listId = req.params.listId;
-    this.database.all(
-      `select gl.*
-            from grocery_list_access_level glal
-            join grocery_list gl on glal.grocery_list_id = gl.id
-            where glal.user_id = $id and glal.grocery_list_id = $list_id;`,
-      {
-        $id: userId,
-        $list_id: listId
-      },
-      (error, rows) => {
-        if (error) {
-          const msg = `Error executing database query!\n${error}`;
-          console.error(msg);
-          return res.status(500).send(msg);
-        }
-        return res.status(200).send(JSON.stringify(rows));
-      }
-    );
-  }
-}
+interface CreateGroceryListBody {
+  owner: string,
+  name: string,
+};
 
 export class CreateGroceryList implements RequestDefinition {
   constructor(private database: Database) { }
   httpMethod: HttpMethod = 'put';
   path: string = '/groceryList';
   handler: RequestHandler = (req, res) => {
-    const list = req.body as GroceryList;
-    this.database.run(
-      `insert into grocery_list(name, created_at, updated_at) 
-            values($name, $created_at, $created_at);
-      insert into grocery_list_access_level(name, created_at, updated_at)
-            values($name, $created_at, $created_at); `,
+    const body = req.body as CreateGroceryListBody;
+    this.database.run(`
+        insert into grocery_list(name, created_at, updated_at)
+          values($name, $created_at, $created_at);`,
       {
-        $name: list.name,
+        $name: body.name,
         $created_at: new Date().toISOString(),
       },
       (error) => {
         if (error) {
-          const msg = `Error executing database query!\n${error}`;
-          console.error(msg);
-          return res.status(500).send(msg);
+          console.trace(error);
+          return res.status(500).send(error);
         }
         return res.status(200).send();
       }
-    );
-  }
-}
-
-export class UpdateGroceryList implements RequestDefinition {
-  constructor(private database: Database) { }
-  httpMethod: HttpMethod = 'patch';
-  path: string = '/groceryList';
-  handler: RequestHandler = (req, res) => {
-    const list = req.body as GroceryList;
-    this.database.run(
-      `update grocery_list
-            set name = $name, updated_at = $updated_at
-            where id = $id;`,
+    ).run(`
+        insert into grocery_list_permission(user_id, grocery_list_id, permission_id)
+          values($userId, last_insert_rowid(), 'owner');`,
       {
-        $name: list.name,
-        $updated_at: new Date().toISOString(),
-        $id: list.id,
+        $userId: body.owner,
       },
       (error) => {
         if (error) {
-          const msg = `Error executing database query!\n${error}`;
-          console.error(msg);
-          return res.status(500).send(msg);
+          console.trace(error);
+          return res.status(500).send(error);
         }
         return res.status(200).send();
       }
-    );
+    )
   }
 }
 
@@ -160,6 +117,20 @@ export class DeleteGroceryList implements RequestDefinition {
         return res.status(200).send();
       }
     );
+    this.database.run(
+      `delete from grocery_list_permission where grocery_list_id = $id;`,
+      {
+        $id: listId,
+      },
+      (error) => {
+        if (error) {
+          const msg = `Error executing database query!\n${error}`;
+          console.error(msg);
+          return res.status(500).send(msg);
+        }
+        return res.status(200).send();
+      }
+    );
   }
 }
 
@@ -170,13 +141,12 @@ export class GetGroceryListItem implements RequestDefinition {
   handler: RequestHandler = (req, res) => {
     const locale = req.query.locale;
     const listId = req.params.listId;
-    this.database.all(
-      `select gli.id, git.name, gli.amount, aut."translation" as unit_translation, aut.short_translation as unit_short_translation, gli.bought
-        FROM grocery_list_item gli
-        left join grocery_item gi on gli.grocery_item_id = gi.id
-        left join grocery_item_translation git on gi.id = git.grocery_item_id  and git.locale = $locale
-        left join amount_unit_translation aut on gli.amount_unit_id = aut.id and aut.locale = $locale
-        where gli.grocery_list_id = $list_id;`,
+    this.database.all(`
+      select gli.id, gli.amount, gli.bought, egi.name, eau.name as unit_name, eau.short_name as unit_short_name
+      FROM grocery_list_item gli
+      left join enum_grocery_item egi on gli.grocery_item_id = egi.id and egi.locale = $locale
+      left join enum_amount_unit eau on gli.amount_unit_id = eau.id and eau.locale = $locale
+      where gli.grocery_list_id = $list_id;`,
       {
         $list_id: listId,
         $locale: locale
@@ -201,9 +171,9 @@ export class AddItemToGroceryList implements RequestDefinition {
     const listId = req.params.listId;
     const locale = req.query.locale;
     const item = req.body as GroceryListItem;
-    this.database.run(
-      `insert into grocery_list_item(grocery_list_id, grocery_item_id, amount, amount_unit_id) values
-            ($list_id, $item_id, $amount, $unit_id);`,
+    this.database.run(`
+      insert into grocery_list_item(grocery_list_id, grocery_item_id, amount, amount_unit_id) values
+      ($list_id, $item_id, $amount, $unit_id);`,
       {
         $list_id: item.grocery_list_id,
         $item_id: item.grocery_item_id,
@@ -216,13 +186,12 @@ export class AddItemToGroceryList implements RequestDefinition {
           console.error(msg);
           return res.status(500).send(msg);
         }
-        this.database.get(
-          `select gli.id, git.name, gli.amount, aut."translation" as unit_translation, aut.short_translation as unit_short_translation, gli.bought
-            FROM grocery_list_item gli
-            left join grocery_item gi on gli.grocery_item_id = gi.id
-            left join grocery_item_translation git on gi.id = git.grocery_item_id  and git.locale = $locale
-            left join amount_unit_translation aut on gli.amount_unit_id = aut.id and aut.locale = $locale
-            where gli.id = last_insert_rowid();`,
+        this.database.get(`
+          select gli.id, egi.name, gli.amount, eau.name as unit_name, eau.short_name as unit_short_name, gli.bought
+          FROM grocery_list_item gli
+          left join enum_grocery_item egi on gli.grocery_item_id = egi.id and egi.locale = $locale
+          left join enum_amount_unit eau on gli.amount_unit_id = eau.id and eau.locale = $locale
+          where gli.id = last_insert_rowid();`,
           { $locale: locale },
           (error, row) => {
             if (error) {
@@ -246,12 +215,10 @@ export class UpdateGroceryListItemBoughtStatus implements RequestDefinition {
   handler: RequestHandler = (req, res) => {
     const itemId = req.params.itemId;
     const item = req.body as GroceryListItem;
-    console.log(`itemId: ${itemId}, ${JSON.stringify(item)} `);
-    this.database.run(
-      `update grocery_list_item
-        set bought = $bought
-        where id = $item_id;
-      `,
+    this.database.run(`
+      update grocery_list_item
+      set bought = $bought
+      where id = $item_id;`,
       {
         $bought: item.bought,
         $item_id: itemId,
@@ -274,9 +241,9 @@ export class DeleteGroceryListItem implements RequestDefinition {
   path: string = '/groceryList/:listId/item/:itemId';
   handler: RequestHandler = (req, res) => {
     const itemId = req.params.itemId;
-    this.database.run(
-      `delete from grocery_list_item
-            where id = $item_id;`,
+    this.database.run(`
+      delete from grocery_list_item
+      where id = $item_id;`,
       {
         $item_id: itemId,
       },

@@ -7,14 +7,13 @@ export class GetGroceryItems implements RequestDefinition {
   constructor(private database: Database) { }
 
   httpMethod: HttpMethod = 'get';
-  path: string = '/groceryItems';
+  path: string = '/groceryItem';
   handler: RequestHandler = (req, res) => {
     const locale = req.query.locale;
-    this.database.all(
-      `select gi.*, git.name  
-        from grocery_item gi
-        left join grocery_item_translation git on gi.id = git.grocery_item_id 
-        where locale = $locale; `,
+    this.database.all(`
+      select egi.*
+      from enum_grocery_item egi
+      where locale = $locale;`,
       {
         $locale: locale,
       },
