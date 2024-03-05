@@ -70,7 +70,7 @@ create table recipe_ingredient(
 	grocery_item_id integer,
 	amount int not null,
 	amount_unit_id integer,
-	primary key(recipe_id),
+	primary key(recipe_id, grocery_item_id),
 	FOREIGN KEY(recipe_id) REFERENCES recipe(id),
 	FOREIGN KEY(grocery_item_id) REFERENCES grocery_item(id),
 	FOREIGN KEY(amount_unit_id) REFERENCES amount_unit(id)

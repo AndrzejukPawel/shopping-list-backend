@@ -6,6 +6,7 @@ import { RequestDefinition } from './interfaces/method';
 import { AddItemToGroceryList, CreateGroceryList, DeleteGroceryList, DeleteGroceryListItem as DeleteGroceryListItem, GetGroceryListItem, GetUserGroceryList, GetUserGroceryLists, UpdateGroceryList, UpdateGroceryListItemBoughtStatus } from './requests/groceryListRequests';
 import { GetUnits } from './requests/unitsRequests';
 import { GetGroceryItems } from './requests/groceryItemsRequests';
+import { GetRecipes } from './requests/recipeRequests';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 //console.log(Object.getOwnPropertyNames(process.env).forEach(prop => { console.log(`${prop} = ${process.env[prop]}`) }));
@@ -37,6 +38,7 @@ dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
         new DeleteGroceryListItem(database),
         new GetUnits(database),
         new GetGroceryItems(database),
+        new GetRecipes(database),
       ];
       console.log(`Registering requests:`)
       requests.forEach((req) => {
