@@ -1,9 +1,9 @@
 import { RequestHandler } from 'express';
 import { Database } from 'sqlite3';
-import { HttpMethod, RequestDefinition } from '../interfaces/method';
+import { HttpMethod, Request } from '../interfaces/Request';
 
 
-export class GetUnits implements RequestDefinition {
+export class GetUnits implements Request {
   constructor(private database: Database) { }
 
   httpMethod: HttpMethod = 'get';

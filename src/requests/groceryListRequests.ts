@@ -1,10 +1,10 @@
 import { RequestHandler } from 'express';
-import { HttpMethod, RequestDefinition } from '../interfaces/method';
+import { HttpMethod, Request } from '../interfaces/Request';
 import { Database } from 'sqlite3';
 import { GroceryList } from '../models/groceryList';
 import { GroceryListItem } from '../models/groceryListItem';
 
-export class GetUserGroceryLists implements RequestDefinition {
+export class GetUserGroceryLists implements Request {
   constructor(private database: Database) { }
 
   httpMethod: HttpMethod = 'get';
@@ -46,7 +46,7 @@ interface CreateGroceryListBody {
   name: string,
 };
 
-export class CreateGroceryList implements RequestDefinition {
+export class CreateGroceryList implements Request {
   constructor(private database: Database) { }
   httpMethod: HttpMethod = 'put';
   path: string = '/groceryList';
@@ -83,7 +83,7 @@ export class CreateGroceryList implements RequestDefinition {
   }
 }
 
-export class DeleteGroceryList implements RequestDefinition {
+export class DeleteGroceryList implements Request {
   constructor(private database: Database) { }
   httpMethod: HttpMethod = 'delete';
   path: string = '/groceryList/:listId';
@@ -134,7 +134,7 @@ export class DeleteGroceryList implements RequestDefinition {
   }
 }
 
-export class GetGroceryListItem implements RequestDefinition {
+export class GetGroceryListItem implements Request {
   constructor(private database: Database) { }
   httpMethod: HttpMethod = 'get';
   path: string = '/groceryList/:listId/item';
@@ -163,7 +163,7 @@ export class GetGroceryListItem implements RequestDefinition {
   }
 }
 
-export class AddItemToGroceryList implements RequestDefinition {
+export class AddItemToGroceryList implements Request {
   constructor(private database: Database) { }
   httpMethod: HttpMethod = 'put';
   path: string = '/groceryList/:listId/item';
@@ -208,7 +208,7 @@ export class AddItemToGroceryList implements RequestDefinition {
   }
 }
 
-export class UpdateGroceryListItemBoughtStatus implements RequestDefinition {
+export class UpdateGroceryListItemBoughtStatus implements Request {
   constructor(private database: Database) { }
   httpMethod: HttpMethod = 'patch';
   path: string = '/groceryList/:listId/item/:itemId';
@@ -235,7 +235,7 @@ export class UpdateGroceryListItemBoughtStatus implements RequestDefinition {
   }
 }
 
-export class DeleteGroceryListItem implements RequestDefinition {
+export class DeleteGroceryListItem implements Request {
   constructor(private database: Database) { }
   httpMethod: HttpMethod = 'delete';
   path: string = '/groceryList/:listId/item/:itemId';

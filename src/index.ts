@@ -2,7 +2,7 @@ import express from 'express'
 import dotenv from 'dotenv'
 import { CreateUser, GetUser } from './requests/userRequests';
 import { Database } from 'sqlite3';
-import { RequestDefinition } from './interfaces/method';
+import { Request } from './interfaces/Request';
 import {
   AddItemToGroceryList,
   CreateGroceryList,
@@ -14,7 +14,7 @@ import {
 } from './requests/groceryListRequests';
 import { GetUnits } from './requests/unitsRequests';
 import { GetGroceryItems } from './requests/groceryItemsRequests';
-import { GetRecipes } from './requests/recipeRequests';
+import { CreateRecipe, GetRecipes } from './requests/recipeRequests';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 //console.log(Object.getOwnPropertyNames(process.env).forEach(prop => { console.log(`${prop} = ${process.env[prop]}`) }));
@@ -30,9 +30,9 @@ dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
     console.log(`Connected to ${process.env.DB_PATH} database`);
 
     database.serialize(() => {
-      const app = express();
-      app.use(express.json())
-      const requests: RequestDefinition[] = [
+      const app = express()
+        .use(express.json());
+      const requests: Request[] = [
         new GetUser(database),
         new CreateUser(database),
         new GetUserGroceryLists(database),
@@ -45,6 +45,7 @@ dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
         new GetUnits(database),
         new GetGroceryItems(database),
         new GetRecipes(database),
+        new CreateRecipe(database),
       ];
       console.log(`Registering requests:`)
       requests.forEach((reqDef) => {
